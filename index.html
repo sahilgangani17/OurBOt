@@ -1,156 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Botpress Webchat Integration</title>
+    <title>Courses After 12th</title>
+    <!-- <link rel="lcon" href="logo2.png"> -->
     <link rel="icon" href="logo2.png">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2024/12/21/05/20241221052044-QYDSUR42.js"></script>
     <style>
-        /* Reset default browser styles */
-        * {
+        body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
+            background: url(bg.png); /* Gradient background */
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background: url('bg.png') no-repeat center center fixed;
-            background-size: cover;
-            margin: 0;
-            overflow: hidden;
-            position: relative;
+            height: 100vh;
+            overflow: hidden; /* Prevent body from scrolling */
+            flex-direction: column;
+            position: relative; /* Allow absolute positioning for the header */
         }
-
-        /* Logo styling */
-        .logo {
+        header {
             position: absolute;
             top: 20px;
-            right: 20px;
-            width: 50px; /* Adjust logo size */
+            left: 20px;
+            z-index: 10;
+        }
+        header img {
+            max-width: 200px; /* Adjust logo size */
             height: auto;
         }
-
-        /* Webchat container styling */
-        .webchat {
+        .mind-map-wrapper {
             width: 100%;
-            max-width: 420px;
-            height: 80vh;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6), 0 0 40px 10px rgba(59, 130, 246, 0.4);
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            animation: glow-pulse 2s infinite;
+            height: 100vh;
+            overflow: auto; /* Allow scrolling */
+            padding: 20px;
+            padding-top: 80px; /* Ensure space for the header */
         }
-
-        /* Glow pulse animation */
-        @keyframes glow-pulse {
-            0% {
-                box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6), 0 0 40px 10px rgba(59, 130, 246, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 30px 8px rgba(59, 130, 246, 0.8), 0 0 50px 15px rgba(59, 130, 246, 0.6);
-            }
-
-            100% {
-                box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6), 0 0 40px 10px rgba(59, 130, 246, 0.4);
-            }
-        }
-
-        /* Webchat iframe styling */
-        iframe {
+        svg {
             width: 100%;
-            height: 100%;
-            border: none;
+            height: 2000px; /* Fixed height for scrolling */
+            background-color: rgba(0, 0, 0, 0.5); /* Transparent black background */
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
-
-        /* Optional button to open chat - hidden by default */
-        .open-chat-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            background-color: #3B82F6;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
+        .node circle {
+            fill: #6baed6;
+            stroke: #fff;
+            stroke-width: 2px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: fill 0.3s ease; /* Smooth hover transition */
         }
-
-        .open-chat-btn:hover {
-            background-color: #2563EB;
+        .node text {
+            font-size: 14px;
+            fill: #fff; /* Change text color to white for better visibility */
+            pointer-events: none;
         }
-
-        .open-chat-btn:focus {
-            outline: none;
+        .link {
+            fill: none;
+            stroke-width: 2px;
+            cursor: pointer;
+            transition: stroke 0.3s ease; /* Smooth transition for links */
+        }
+        .node:hover circle {
+            fill: #ff8c00; /* Hover effect for nodes */
+        }
+        .node:hover text {
+            font-weight: bold;
+        }
+        .link:hover {
+            stroke: #ff8c00; /* Hover effect for links */
+        }
+        .node-description {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            width: 250px;
+            z-index: 100;
+        }
+        .node-description img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff8c00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            background-color: #ff4500;
         }
     </style>
 </head>
-
 <body>
-    <!-- Logo on top right corner -->
-    <img src="logo2.png" alt="Logo" class="logo">
-
-    <!-- Webchat Container -->
-    <div class="webchat">
-        <iframe id="botpress-webchat" srcdoc='
-        <!doctype html>
-        <html lang="en">
-            <head></head>
-            <body>
-                <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
-                <script defer>
-                    window.botpress.on("webchat:ready", (conversationId) => {
-                        botpress.open();  // Automatically open the chat
-                    });
-
-                    window.botpress.init({
-                        "botId": "839a14ab-6663-41af-98ba-af4c91128edd",  // Replace with your Bot ID
-                        "configuration": {
-                            "color": "#3B82F6",
-                            "variant": "solid",
-                            "themeMode": "light",
-                            "fontFamily": "inter",
-                            "radius": 4
-                        },
-                        "clientId": "5ea88147-f01c-47c5-b6f8-43dd26a3b994"  // Replace with your Client ID
-                    });
-                </script>
-            </body>
-        </html>'
-        onerror="handleIframeError()"></iframe>
+    <header>
+        <img src="logo2.png" alt="Logo">
+    </header>
+    
+    <div class="mind-map-wrapper">
+        <svg id="mindMap"></svg>
+    </div>
+    <div id="description" class="node-description">
+        <button class="close-btn" id="close-btn">Close</button>
+        <h3 id="desc-title"></h3>
+        <img id="desc-image" src="" alt="" />
+        <p id="desc-text"></p>
     </div>
 
-    <!-- Optional Button to open chat -->
-    <!-- <button class="open-chat-btn" onclick="openChat()">Open Chat</button> -->
-
     <script>
-        // Error handler for iframe loading
-        function handleIframeError() {
-            console.error("Error loading the Webchat iframe. Please check your Bot ID and Client ID.");
+        // Data for mind map with descriptions and images
+        const data = {
+            name: "Courses After 12th",
+            children: [
+                {
+                    name: "Science Stream",
+                    description: "Courses related to medical and engineering fields.",
+                    image: "https://via.placeholder.com/200x100.png?text=Science",
+                    children: [
+                        { name: "Medical", description: "Courses for aspiring doctors.", image: "https://via.placeholder.com/200x100.png?text=Medical" },
+                        { name: "Engineering", description: "Courses in technology and engineering.", image: "https://via.placeholder.com/200x100.png?text=Engineering" },
+                        { name: "Other Science", description: "Courses in other scientific fields.", image: "https://via.placeholder.com/200x100.png?text=Other+Science" }
+                    ]
+                },
+                {
+                    name: "Commerce Stream",
+                    description: "Courses related to business, finance, and accounting.",
+                    image: "https://via.placeholder.com/200x100.png?text=Commerce",
+                    children: [
+                        { name: "B.Com", description: "Bachelor of Commerce.", image: "https://via.placeholder.com/200x100.png?text=B.Com" },
+                        { name: "BBA", description: "Bachelor of Business Administration.", image: "https://via.placeholder.com/200x100.png?text=BBA" },
+                        { name: "CA", description: "Chartered Accountancy.", image: "https://via.placeholder.com/200x100.png?text=CA" }
+                    ]
+                },
+                {
+                    name: "Arts Stream",
+                    description: "Courses related to arts, media, and humanities.",
+                    image: "https://via.placeholder.com/200x100.png?text=Arts",
+                    children: [
+                        { name: "B.A.", description: "Bachelor of Arts in various subjects.", image: "https://via.placeholder.com/200x100.png?text=B.A." },
+                        { name: "Journalism", description: "Courses in Journalism and Mass Communication.", image: "https://via.placeholder.com/200x100.png?text=Journalism" },
+                        { name: "Fine Arts", description: "Courses in painting, sculpture, and more.", image: "https://via.placeholder.com/200x100.png?text=Fine+Arts" }
+                    ]
+                },
+                {
+                    name: "Other Courses",
+                    description: "Various courses outside traditional streams.",
+                    image: "https://via.placeholder.com/200x100.png?text=Other+Courses",
+                    children: [
+                        { name: "Animation", description: "Courses in animation and multimedia.", image: "https://via.placeholder.com/200x100.png?text=Animation" },
+                        { name: "Law", description: "Law and legal studies.", image: "https://via.placeholder.com/200x100.png?text=Law" },
+                        { name: "Aviation", description: "Courses in aviation, including pilot training.", image: "https://via.placeholder.com/200x100.png?text=Aviation" }
+                    ]
+                }
+            ]
+        };
+
+        // Set up the SVG canvas dimensions
+        const width = window.innerWidth;
+        const height = 2000; // Fixed height for scrolling
+        const svg = d3.select("#mindMap").attr("width", width).attr("height", height);
+
+        // Create a tree layout
+        const treeLayout = d3.tree().size([height, width - 200]);
+
+        // Process the data into a tree structure
+        const root = d3.hierarchy(data);
+        treeLayout(root);
+
+        // Create a color scale for links (different colors for each stream)
+        const linkColorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Create links between nodes with different colors
+        svg.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d3.linkHorizontal()
+                .x(d => d.y + 50) // Move the links a bit to the right
+                .y(d => d.x)
+            )
+            .attr("stroke", (d, i) => linkColorScale(i));
+
+        // Create nodes
+        const nodes = svg.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.y + 50},${d.x})`) // Adjust x for right positioning
+            .on("click", function(event, d) {
+                showDescription(d);
+            });
+
+        // Add circles to the nodes with different colors
+        nodes.append("circle")
+            .attr("r", 12)  // Increased radius for better visibility
+            .attr("fill", (d) => {
+                if (d.depth === 0) return "#6baed6"; // Root node color
+                else if (d.depth === 1) return "#ff8c00"; // First level nodes
+                else return "#a2d5f2"; // Other nodes
+            });
+
+        // Add text to the nodes
+        nodes.append("text")
+            .attr("dy", -15)
+            .attr("text-anchor", "middle")
+            .text(d => d.data.name);
+
+        // Function to show description
+        function showDescription(d) {
+            document.getElementById("desc-title").textContent = d.data.name;
+            document.getElementById("desc-text").textContent = d.data.description;
+            document.getElementById("desc-image").src = d.data.image;
+            document.getElementById("description").style.display = "block";
         }
 
-        // Function to open the chat when the button is clicked
-        function openChat() {
-            const iframe = document.getElementById('botpress-webchat');
-            iframe.contentWindow.postMessage({ type: 'open' }, '*');
-        }
+        // Close description box
+        document.getElementById("close-btn").addEventListener("click", () => {
+            document.getElementById("description").style.display = "none";
+        });
     </script>
+    
+    <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
+<script src="https://files.bpcontent.cloud/2024/12/21/05/20241221052044-QYDSUR42.js"></script>
+    
 </body>
-
 </html>
