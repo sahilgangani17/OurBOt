@@ -1,6 +1,7 @@
 <main>
     <section>
         <h2>Project Status</h2>
+        <h3>Closed Project</h3>
         <p>Please note that this is <strong>not the final version</strong> of the project. There are still many aspects to improve and features to implement in the future. We are actively working on enhancements to make it more robust and user-friendly.</p>
     </section>
     <section>
